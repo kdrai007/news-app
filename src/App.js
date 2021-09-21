@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react'
 
 import NewsItem from '../src/components/NewsItem'
-import Spinner from './Spinner';
 import PropTypes from 'prop-types'
 import InfiniteScroll from "react-infinite-scroll-component";
 
@@ -48,12 +47,12 @@ const News = (props)=>{
         return (
             <>
                 <h1 className="text-center" style={{ margin: '35px 0px', marginTop: '90px' }}>NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines</h1>
-                {loading && <Spinner />}
+                {/* {loading && <Spinner />} */}
                 <InfiniteScroll
                     dataLength={articles.length}
                     next={fetchMoreData}
                     hasMore={articles.length !== totalResults}
-                    loader={<Spinner/>}
+                    // loader={<Spinner/>}
                 > 
                     <div className="container">
                          

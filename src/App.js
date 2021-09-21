@@ -1,52 +1,87 @@
-import './App.css';
+import React, {useEffect, useState} from 'react'
 
-import React, { Component } from 'react'
+import NewsItem from './NewsItem'
+import Spinner from './Spinner';
+import PropTypes from 'prop-types'
+import InfiniteScroll from "react-infinite-scroll-component";
 
-import News from './components/News';
-import NavBar from './components/NavBar';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-} from "react-router-dom";
+const News = (props)=>{
+    const [articles, setArticles] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [page, setPage] = useState(1)
+    const [totalResults, setTotalResults] = useState(0)
+    
+    const capitalizeFirstLetter = (string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    } 
 
-export default class App extends Component {
-
-  render() {
-    let Style='dark';
-    const Changetheme=()=>{
-      if(Style==='dark'){
-        // const mystyle={
-        //   color:'white',
-        //   backgroundColor:'black'
-        // }
-        document.body.style.backgroundColor='rgb(51, 46, 46)'
-        Style='light'
-      }
-      else{
-        // const mystyle={
-        //   color:'black',
-        //   backgroundColor:'white'
-        // }
-        document.body.style.backgroundColor='white'
-        Style='dark'
-      }
+    const updateNews = async ()=> {
+        props.setProgress(10);
+        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=c2eda67f4f3d437db5f58faccf241af8&page=${page}&pageSize=${props.pageSize}`; 
+        setLoading(true)
+        let data = await fetch(url);
+        props.setProgress(30);
+        let parsedData = await data.json()
+        props.setProgress(70);
+        setArticles(parsedData.articles)
+        setTotalResults(parsedData.totalResults)
+        setLoading(false)
+        props.setProgress(100);
     }
-    return (
-      <div>
-        <Router>
-        <NavBar Changetheme={Changetheme} handlechange={(e)=>{console.log(e.target.value)}} />
-        <Switch>
-          <Route exact path="/"><News  key="general" pageSize={6} country="in" category="general"/></Route>
-          <Route exact path="/technology"><News key="general" pageSize={6} country="in" category="technology"/></Route>
-          <Route exact path="/business"><News key="business" pageSize={6} country="in" category="business"/></Route>
-          <Route exact path="/entertainment"><News key="entertainment" pageSize={6} country="in" category="entertainment"/></Route>
-          
-          <Route exact path="/science"><News key="science" pageSize={6} country="in" category="science"/></Route>
-          <Route exact path="/health"><News key="health" pageSize={6} country="in" category="health"/></Route>
-        </Switch>
-        </Router>
-      </div>
-    )
-  }
+
+    useEffect(() => {
+        document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
+        updateNews(); 
+        // eslint-disable-next-line
+    }, [])
+
+
+    const fetchMoreData = async () => {   
+        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=c2eda67f4f3d437db5f58faccf241af8&page=${page+1}&pageSize=${props.pageSize}`;
+        setPage(page+1) 
+        let data = await fetch(url);
+        let parsedData = await data.json()
+        setArticles(articles.concat(parsedData.articles))
+        setTotalResults(parsedData.totalResults)
+      };
+ 
+        return (
+            <>
+                <h1 className="text-center" style={{ margin: '35px 0px', marginTop: '90px' }}>NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines</h1>
+                {loading && <Spinner />}
+                <InfiniteScroll
+                    dataLength={articles.length}
+                    next={fetchMoreData}
+                    hasMore={articles.length !== totalResults}
+                    loader={<Spinner/>}
+                > 
+                    <div className="container">
+                         
+                    <div className="row">
+                        {articles.map((element) => {
+                            return <div className="col-md-4" key={element.url}>
+                                <NewsItem title={element.title ? element.title : ""} description={element.description ? element.description : ""} imageUrl={element.urlToImage} newsUrl={element.url} author={element.author} date={element.publishedAt} source={element.source.name}/>
+                            </div>
+                        })}
+                    </div>
+                    </div> 
+                </InfiniteScroll>
+            </>
+        )
+    
 }
+
+
+News.defaultProps = {
+    country: 'in',
+    pageSize: 8,
+    category: 'general',
+}
+
+News.propTypes = {
+    country: PropTypes.string,
+    pageSize: PropTypes.number,
+    category: PropTypes.string,
+}
+
+export default News

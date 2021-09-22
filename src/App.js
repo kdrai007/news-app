@@ -1,86 +1,39 @@
-import React, {useEffect, useState} from 'react'
+import './App.css';
 
-import NewsItem from '../src/components/NewsItem'
-import PropTypes from 'prop-types'
-import InfiniteScroll from "react-infinite-scroll-component";
+import React, { useState } from 'react'
+import NavBar from './components/NavBar';
+import News from './components/News';
+import {BrowserRouter as Router, Switch, Route} from "react-router-dom";
+import LoadingBar from 'react-top-loading-bar'
 
-const News = (props)=>{
-    const [articles, setArticles] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [page, setPage] = useState(1)
-    const [totalResults, setTotalResults] = useState(0)
-    
-    const capitalizeFirstLetter = (string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    } 
-
-    const updateNews = async ()=> {
-        props.setProgress(10);
-        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=c2eda67f4f3d437db5f58faccf241af8&page=${page}&pageSize=${props.pageSize}`; 
-        setLoading(true)
-        let data = await fetch(url);
-        props.setProgress(30);
-        let parsedData = await data.json()
-        props.setProgress(70);
-        setArticles(parsedData.articles)
-        setTotalResults(parsedData.totalResults)
-        setLoading(false)
-        props.setProgress(100);
-    }
-
-    useEffect(() => {
-        document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
-        updateNews(); 
-        // eslint-disable-next-line
-    }, [])
-
-
-    const fetchMoreData = async () => {   
-        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=c2eda67f4f3d437db5f58faccf241af8&page=${page+1}&pageSize=${props.pageSize}`;
-        setPage(page+1) 
-        let data = await fetch(url);
-        let parsedData = await data.json()
-        setArticles(articles.concat(parsedData.articles))
-        setTotalResults(parsedData.totalResults)
-      };
+const App = ()=> {
+  const pageSize = 5;
+//   const apiKey = process.env.REACT_APP_NEWS_API
+  const [progress, setProgress] = useState(0)
  
-        return (
-            <>
-                <h1 className="text-center" style={{ margin: '35px 0px', marginTop: '90px' }}>NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines</h1>
-                {/* {loading && <Spinner />} */}
-                <InfiniteScroll
-                    dataLength={articles.length}
-                    next={fetchMoreData}
-                    hasMore={articles.length !== totalResults}
-                    // loader={<Spinner/>}
-                > 
-                    <div className="container">
-                         
-                    <div className="row">
-                        {articles.map((element) => {
-                            return <div className="col-md-4" key={element.url}>
-                                <NewsItem title={element.title ? element.title : ""} description={element.description ? element.description : ""} imageUrl={element.urlToImage} newsUrl={element.url} author={element.author} date={element.publishedAt} source={element.source.name}/>
-                            </div>
-                        })}
-                    </div>
-                    </div> 
-                </InfiniteScroll>
-            </>
-        )
-    
+    return (
+      <div>
+        <Router>
+        <NavBar/> 
+        <LoadingBar
+        height={3}
+        color='#f11946'
+        progress={progress} 
+      />
+        <Switch>
+          <Route exact path="/"><News setProgress={setProgress}  key="general" pageSize={pageSize} country="in" category="general"/></Route> 
+          <Route exact path="/business"><News setProgress={setProgress}  key="business" pageSize={pageSize} country="in" category="business"/></Route> 
+          <Route exact path="/entertainment"><News setProgress={setProgress}  key="entertainment" pageSize={pageSize} country="in" category="entertainment"/></Route> 
+          <Route exact path="/general"><News setProgress={setProgress}  key="general" pageSize={pageSize} country="in" category="general"/></Route> 
+          <Route exact path="/health"><News setProgress={setProgress}  key="health" pageSize={pageSize} country="in" category="health"/></Route> 
+          <Route exact path="/science"><News setProgress={setProgress}  key="science" pageSize={pageSize} country="in" category="science"/></Route> 
+          <Route exact path="/sports"><News setProgress={setProgress}  key="sports" pageSize={pageSize} country="in" category="sports"/></Route> 
+          <Route exact path="/technology"><News setProgress={setProgress}  key="technology" pageSize={pageSize} country="in" category="technology"/></Route> 
+        </Switch>
+        </Router>
+      </div>
+    )
+ 
 }
 
-
-News.defaultProps = {
-    country: 'in',
-    pageSize: 8,
-    category: 'general',
-}
-
-News.propTypes = {
-    country: PropTypes.string,
-    pageSize: PropTypes.number,
-    category: PropTypes.string,
-}
-
-export default News
+export default App;
